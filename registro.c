@@ -7,28 +7,35 @@
 
 struct tm *data;
 
-int pdlt(){
-    setlocale(LC_ALL, "Portuguese");
-	int opcao, pdl;
-	char pdlc[5];
-	FILE *pdlatual;
-
-	pdlatual = fopen("pdl.txt","r");
-	fgets(pdlc, 5, pdlatual);
-	pdl = atoi(pdlc);
-    fclose(pdlatual);
-	printf("Seu pdl está em --> %d \nInsira o valor correto -->",pdl);
-    scanf("%d",&pdl);
-    pdlatual = fopen("pdl.txt","w");
-    fprintf(pdlatual, "%d\n", pdl);
-    printf("Seu pdl atual foi alterado para %d\n",pdl);
-    fclose(pdlatual);
-	getch();
-	return pdl;
+void atualiza_tempo(){
+    time_t segundos;
+    time(&segundos);
+    data = localtime(&segundos);  
 }
 
-void funcao_mapa(int *mapa, char mapac[20]){
-    switch(*mapa){
+int getpdl(){
+    FILE *pdlatual;
+    int pdl;
+    char temp1[5];
+    pdlatual = fopen("pdl.txt", "r");
+    fgets(temp1, 5, pdlatual);
+    fclose(pdlatual);
+    pdl = atoi(temp1);
+    return pdl;
+}
+
+void funcao_mapa(char mapac[20]){
+    int mapa;
+    system("cls");
+            printf("====Qual mapa?====\n");
+            printf("1-Bank (Banco)\t\t\t2-Border (Fronteira)\t\t3-Chalet\n");
+            printf("4-Club House (Casa de Festas)\t5-Coastline (Litoral)\t\t6-Consulate(Consulado) \n");
+            printf("7-Kafe Dostoyevsky\t\t8-Kanals (Canal)\t\t9-Oregon \n");
+            printf("10-Outback\t\t\t11-Skyscraper (Arranha-ceu)\t12-Villa (Mansao)\n");
+            printf("0-\"------\"\n -> ");
+            scanf("%d", &mapa);
+            system("cls");
+    switch(mapa){
         case 0 : strcpy(mapac, "------");
                  break;
         case 1 : strcpy(mapac, "Banco");
@@ -59,8 +66,15 @@ void funcao_mapa(int *mapa, char mapac[20]){
     }
 }
 
-void funcao_mvp(int *mvp, char mvpchar[10]){
-    switch(*mvp){
+void funcao_mvp(char mvpchar[10]){
+    int mvp;
+    system("cls");      
+            printf("====Quem foi o MVP?====\n");
+            printf("1-CPF\t\t2-Gasly\t\t3-Jompe\n");
+            printf("4-Pao\t\t5-Piai\t\t6-Poto\n");
+            printf("7-Mizoo\t\t8-Reid\t\t9-Rickson\n0-Random\n->");
+            scanf("%d", &mvp);
+    switch(mvp){
         case 1: strcpy(mvpchar, "CPF");
             break;
         case 2: strcpy(mvpchar, "Gasly");
@@ -84,33 +98,23 @@ void funcao_mvp(int *mvp, char mvpchar[10]){
     }
 }
 
-void registrar(char *wl, int *pdltotal){
-    int mapa, dia, mes, ano, pdl, hora, mvp;
-    char pdltotalchar[5], mapac[20], horario[10], mvpc[10];
-    time_t segundos;
-    FILE *file, *pdlatual;
-
-    file= fopen("registro.txt", "a");
+int pdlt(){
+	int opcao, pdl;
+	FILE *pdlatual;
     system("cls");
-    printf("Ganhou ou Perdeu?  \n(W) Win    (L) Lose   (S) Sair\n -> ");
-    scanf(" %c", wl);
-    system("cls");
+	pdl=getpdl();
+	printf("Seu pdl está em --> %d \nInsira o valor correto -->",pdl);
+    scanf("%d",&pdl);
+    pdlatual = fopen("pdl.txt","w");
+    fprintf(pdlatual, "%d\n", pdl);
+    printf("Seu pdl atual foi alterado para %d\n",pdl);
+    fclose(pdlatual);
+	getch();
+	return pdl;
+}
 
-    if(*wl != 'W' && *wl !='L' && *wl != 'S'&& *wl != 'w' && *wl !='l' && *wl != 's'){
-        printf("ERRRROU!\n");
-        registrar(wl, pdltotal);
-    }
-    else{
-        while(*wl != 'S' && *wl!='s'){
-            system("cls");
-            time(&segundos);
-            data = localtime(&segundos);
-            dia = data->tm_mday;
-            mes = data->tm_mon + 1;
-            ano = data->tm_year + 1900;
-            hora = data->tm_hour;
-
-            switch(hora){
+void funcao_horario(char horario[10]){
+    switch(data->tm_hour){
                 case  0 ... 6 	: strcpy(horario,"Madrugada");
                         break;
                 case  7 ... 12 	: strcpy(horario,"Manha");
@@ -120,62 +124,80 @@ void registrar(char *wl, int *pdltotal){
                 case  19 ... 23 : strcpy(horario,"Noite");
                         break;
             };
+}
 
+void win(int *pdltotal){
+    FILE *file, *pdlatual;
+    int pdl;
+    char mapac[20], mvpc[10], horario[10];
+
+
+    printf("Ganhou quanto pdl? \n ->");
+    scanf("%d", &pdl);
+    *pdltotal = getpdl()+ pdl;
+    funcao_mapa(mapac);
+    funcao_mvp(mvpc);
+    atualiza_tempo();
+    funcao_horario(horario);
+    system("cls");
+    file=fopen("registro.txt","a");
+    printf("Win!  ganhou %d pdl e agora seu pdl eh %d \nMapa: %s \nO mvp foi: %s \nData: %d/%d/%d de %s\n\n\n\n", pdl, *pdltotal, mapac, mvpc, data->tm_mday, data->tm_mon+1, data->tm_year+1900, horario);
+    fprintf(file, "Win! \t+%d\t %d/%d/%d de %s\t mapa:%s\tMVP:%s\n", pdl, data->tm_mday, data->tm_mon+1, data->tm_year+1900, horario, mapac,mvpc);
+    fclose(file);
+    pdlatual = fopen("pdl.txt", "w");
+    fprintf(pdlatual, "%d\n", *pdltotal);
+    fclose(pdlatual);
+    getch();
+}
+
+void lose(int *pdltotal){
+    FILE *file, *pdlatual;
+    int pdl;
+    char mapac[20], horario[10];
+
+
+    printf("Perdeu quanto pdl? \n ->");
+    scanf("%d", &pdl);
+    *pdltotal = getpdl()- pdl;
+    funcao_mapa(mapac);
+    atualiza_tempo();
+    funcao_horario(horario);
+    system("cls");
+    file=fopen("registro.txt","a");
+    printf("Lose!  perdeu %d pdl e agora seu pdl eh %d \nMapa: %s \nData: %d/%d/%d de %s\n\n\n\n", pdl, *pdltotal, mapac, data->tm_mday, data->tm_mon+1, data->tm_year+1900, horario);
+    fprintf(file, "Lose! \t%d\t %d/%d/%d de %s\t mapa:%s\n", -pdl, data->tm_mday, data->tm_mon+1, data->tm_year+1900, horario, mapac);
+    fclose(file);
+    pdlatual = fopen("pdl.txt", "w");
+    fprintf(pdlatual, "%d\n", *pdltotal);
+    fclose(pdlatual);
+    getch();
+}
+
+
+void registrar(char *wl, int *pdltotal){
+    FILE *file, *pdlatual;
+
+
+    file= fopen("registro.txt", "a");
+    system("cls");
+    printf("Ganhou ou Perdeu?  \n(W) Win    (L) Lose   (S) Sair\n -> ");
+    scanf(" %c", wl);
+
+    system("cls");
+    if(*wl != 'W' && *wl !='L' && *wl != 'S'&& *wl != 'w' && *wl !='l' && *wl != 's'){
+        printf("ERRRROU!\n");
+        registrar(wl, pdltotal);
+    }
+    else{
+        while(*wl != 'S' && *wl!='s'){
+            system("cls"); 
             if(*wl=='w'||*wl=='W'){
-                printf("Ganhou quanto pdl? \n ->");
-                scanf("%d", &pdl);
+                win(pdltotal);
             }
             else{
-                printf("Perdeu quanto pdl? \n ->");
-                scanf("%d", &pdl);
+                lose(pdltotal);
             }
-
-            system("cls");
-            printf("====Qual mapa?====\n");
-            printf("1-Bank (Banco)\t\t\t2-Border (Fronteira)\t\t3-Chalet\n");
-            printf("4-Club House (Casa de Festas)\t5-Coastline (Litoral)\t\t6-Consulate(Consulado) \n");
-            printf("7-Kafe Dostoyevsky\t\t8-Kanals (Canal)\t\t9-Oregon \n");
-            printf("10-Outback\t\t\t11-Skyscraper (Arranha-ceu)\t12-Villa (Mansao)\n");
-            printf("0-\"------\"\n -> ");
-            scanf("%d", &mapa);
-            system("cls");
-            funcao_mapa(&mapa, mapac);
             
-            system("cls");      
-            printf("====Quem foi o MVP?====\n");
-            printf("1-CPF\t\t2-Gasly\t\t3-Jompe\n");
-            printf("4-Pao\t\t5-Piai\t\t6-Poto\n");
-            printf("7-Mizoo\t\t8-Reid\t\t9-Rickson\n0-Random\n->");
-            scanf("%d", &mvp);
-            funcao_mvp(&mvp, mvpc);
-            
-            if(*wl == 'w' || *wl == 'W'){
-                system("cls");
-            	pdlatual = fopen("pdl.txt", "r");
-                fgets(pdltotalchar, 5, pdlatual);
-                fclose(pdlatual);
-                *pdltotal = atoi(pdltotalchar) + pdl;
-                printf("Win!  ganhou %d pdl e agora seu pdl eh %d \nMapa: %s \nO mvp foi: %s \nData: %d/%d/%d de %s\n\n\n\n", pdl, *pdltotal, mapac, mvpc, dia, mes, ano, horario);
-                fprintf(file, "Win! \t+%d\t %d/%d/%d de %s\t mapa:%s\tMVP:%s\n", pdl, dia, mes, ano, horario, mapac,mvpc);
-                pdlatual = fopen("pdl.txt", "w");
-                fprintf(pdlatual, "%d\n", *pdltotal);
-                fclose(pdlatual);
-                getch();
-            }
-            else{
-                system("cls");
-            	pdlatual = fopen("pdl.txt", "r");
-                fgets(pdltotalchar, 5, pdlatual);
-                fclose(pdlatual);
-                *pdltotal = atoi(pdltotalchar) - pdl;
-                printf("Lose!  perdeu %d pdl e agora seu pdl eh %d \nMapa: %s \nO mvp foi: %s \nData: %d/%d/%d de %s\n\n\n\n", pdl, *pdltotal, mapac, mvpc, dia, mes, ano, horario);
-                fprintf(file, "Lose! \t%d\t %d/%d/%d de %s\t mapa:%s\tMVP=%s\n", -pdl, dia, mes, ano, horario, mapac,mvpc);
-                pdlatual = fopen("pdl.txt", "w");
-                fprintf(pdlatual, "%d\n", *pdltotal);
-                fclose(pdlatual);
-                getch();
-            }
-
             system("cls");
             printf("Ganhou ou mamou?  \n(W) Win    (L) Lose   (S) Sair\n ->");
             scanf(" %c", wl);
@@ -193,15 +215,9 @@ int main(){
     int mapa,pdltotal,opcao;
     char pdlc[5];
     char wl;
-    FILE *pdlatual;
 
-    setlocale(LC_ALL, "Portuguese");
-
-	pdlatual = fopen("pdl.txt","r");
-	fgets(pdlc, 5, pdlatual);
-	pdltotal=atoi(pdlc);
-	fclose(pdlatual);
-
+    pdltotal=getpdl();
+	
     do{
     	system("cls");
         printf("SEU PDL ESTAH EM %d\n---------------------------------------------------------------\n", pdltotal);
